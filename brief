@@ -1,0 +1,75 @@
+# Brief Project: Educore Management (Supabase Edition)
+
+## 1. Teknologi yang Digunakan
+**Frontend:**
+- React (via Vite)
+- TypeScript
+- Tailwind CSS (Styling)
+- Lucide React (Icons)
+- Recharts (Visualisasi Data)
+- React Router DOM (Navigasi)
+
+**Backend & Infrastructure (Supabase):**
+- **Database:** PostgreSQL
+- **Authentication:** Supabase Auth (Email & Password, Role-based)
+- **Storage:** Supabase Storage (Upload Foto Siswa/Guru)
+- **Realtime:** Supabase Realtime (Update Dashboard/Notifikasi)
+- **Security:** Row Level Security (RLS) Policies
+
+## 2. Fitur Utama
+
+### Manajemen Pengguna & Autentikasi
+- **Login/Logout:** Menggunakan Supabase Auth.
+- **Role-based Access:**
+  - **Admin:** Akses penuh ke seluruh sistem.
+  - **Guru:** Akses ke data kelas dan mata pelajaran yang diampu.
+  - **Siswa (Opsional):** Melihat jadwal dan poin mereka sendiri.
+
+### Manajemen Siswa
+- CRUD Data Siswa.
+- Upload foto profil siswa (Supabase Storage bucket: `avatars`).
+- Pencarian dan Filter data siswa.
+
+### Manajemen Kelas & Jadwal
+- CRUD Data Kelas (Nama, Kapasitas, Wali Kelas).
+- Penjadwalan Mata Pelajaran per hari/jam/ruangan.
+- Assign Guru ke Mata Pelajaran & Kelas.
+
+### Manajemen Poin & Pelanggaran
+- Sistem Poin Prestasi & Pelanggaran (Sanksi).
+- Log Aktivitas (Activity Logs) pencatatan poin.
+
+### Dashboard & Laporan
+- **Statistik Real-time:** Jumlah siswa, guru, kelas, poin hari ini.
+- **Visualisasi:** Grafik kehadiran atau poin menggunakan Recharts.
+- **Laporan:** Ekspor data kehadiran/poin (bisa via CSV generate di frontend atau Edge Function).
+
+## 3. Struktur Database (Schema Overview)
+
+**Tabel Utama:**
+- `profiles`: Data detail user, linked ke `auth.users` (1-to-1).
+  - Kolom: `id` (foreign key auth.users), `nama_lengkap`, `role` (admin/guru/siswa), `avatar_url`.
+- `students`: Data siswa.
+  - Kolom: `nis`, `nama`, `kelas_id`, `foto_url`, `alamat`.
+- `classes`: Data kelas.
+  - Kolom: `nama_kelas`, `wali_kelas_id` (relasi ke profiles).
+- `subjects`: Mata pelajaran.
+- `schedules`: Jadwal pelajaran (hari, jam mulai/selesai, subject_id, class_id).
+- `attendance`: Absensi harian.
+- `points_log`: Mencatat prestasi/pelanggaran.
+  - Kolom: `student_id`, `type` (positive/negative), `points`, `description`, `date`.
+
+## 4. Keamanan & Kebijakan (RLS)
+Menggantikan keamanan manual PHP, kita menggunakan **RLS (Row Level Security)** standar PostgreSQL di Supabase:
+- **Public:** Tidak ada akses data tanpa login.
+- **Authenticated:** Bisa membaca data umum (seperti daftar mapel).
+- **Policies:**
+  - Admin: `POLICY "Admin Full Access" ON table FOR ALL USING (auth.uid() IN (SELECT id FROM profiles WHERE role = 'admin'))`
+  - Guru: `POLICY "Guru View Own Classes" ...`
+
+## 5. Langkah Implementasi Migrasi
+1. **Setup Project:** Init React+Vite (sudah ada).
+2. **Install Client:** `npm install @supabase/supabase-js`.
+3. **Database Setup:** Buat tabel dan relasi di Dashboard Supabase atau via SQL Script.
+4. **Auth Integration:** Buat context/provider untuk session management.
+5. **Fitur Migrasi:** Porting logika PHP ke React Components + Supabase Hooks.
